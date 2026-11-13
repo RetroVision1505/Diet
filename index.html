@@ -1,0 +1,2037 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Lean60 — Strict Diet & Shift Tracker</title>
+  <meta name="description" content="Aplikasi tracking diet ketat, intermittent fasting, hidrasi, dan progres berat badan menuju target ideal." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#09090b" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Lean60" />
+  <link id="pwa-manifest" rel="manifest" />
+  <link id="pwa-apple-icon" rel="apple-touch-icon" />
+  <link id="pwa-favicon" rel="icon" type="image/png" />
+
+  <script>
+    // Self-Contained PWA Setup (Dynamic App Icon PNG + Manifest + Offline Service Worker)
+    (function setupLean60PWA() {
+      const iconSvg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+          <defs>
+            <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#18181b"/>
+              <stop offset="55%" stop-color="#1e1b4b"/>
+              <stop offset="100%" stop-color="#09090b"/>
+            </linearGradient>
+            <linearGradient id="flame" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#a78bfa"/>
+              <stop offset="50%" stop-color="#7c3aed"/>
+              <stop offset="100%" stop-color="#10b981"/>
+            </linearGradient>
+          </defs>
+          <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+          <rect x="14" y="14" width="484" height="484" rx="104" fill="none" stroke="rgba(167,139,250,0.35)" stroke-width="8"/>
+          <!-- Flame Emblem -->
+          <path d="M268 96c18 46-12 78-34 102-20 22-36 44-30 76 6 32 34 54 66 54 38 0 68-30 68-70 0-42-28-76-44-96 4 24-8 40-22 46 8-34-4-74-4-112z" fill="url(#flame)"/>
+          <path d="M254 188c-24 24-46 52-42 90 4 38 36 66 74 66 44 0 78-34 78-80 0-34-18-64-36-84 2 22-10 38-24 44 6-26-8-54-50-36z" fill="url(#flame)" opacity="0.88"/>
+          <!-- Bold 60 Badge -->
+          <text x="256" y="424" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="88" letter-spacing="-2" fill="#ffffff">LEAN<tspan fill="#10b981">60</tspan></text>
+        </svg>
+      `.trim();
+
+      function createIconPng(size, callback) {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        const svgBlob = new Blob([iconSvg], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+        img.onload = function() {
+          ctx.drawImage(img, 0, 0, size, size);
+          URL.revokeObjectURL(url);
+          callback(canvas.toDataURL('image/png'));
+        };
+        img.src = url;
+      }
+
+      createIconPng(512, function(png512) {
+        createIconPng(192, function(png192) {
+          const fav = document.getElementById('pwa-favicon');
+          const apple = document.getElementById('pwa-apple-icon');
+          if (fav) fav.href = png192;
+          if (apple) apple.href = png512;
+
+          const manifestObj = {
+            name: 'Lean60 — Strict Diet & Shift Tracker',
+            short_name: 'Lean60',
+            description: 'Aplikasi tracking diet ketat, intermittent fasting, kalori warteg, dan progres target berat badan.',
+            start_url: './',
+            display: 'standalone',
+            orientation: 'portrait',
+            background_color: '#09090b',
+            theme_color: '#09090b',
+            icons: [
+              { src: png192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+              { src: png512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+            ]
+          };
+
+          const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+          const manifestUrl = URL.createObjectURL(manifestBlob);
+          const manifestLink = document.getElementById('pwa-manifest');
+          if (manifestLink) manifestLink.href = manifestUrl;
+        });
+      });
+
+      // Register Inline Service Worker for Offline Caching & Installability
+      if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+        const swCode = `
+          const CACHE_NAME = 'lean60-pwa-v1';
+          self.addEventListener('install', (e) => {
+            self.skipWaiting();
+          });
+          self.addEventListener('activate', (e) => {
+            e.waitUntil(self.clients.claim());
+          });
+          self.addEventListener('fetch', (e) => {
+            if (e.request.method !== 'GET') return;
+            e.respondWith(
+              fetch(e.request)
+                .then((res) => {
+                  const copy = res.clone();
+                  caches.open(CACHE_NAME).then((cache) => cache.put(e.request, copy));
+                  return res;
+                })
+                .catch(() => caches.match(e.request))
+            );
+          });
+        `;
+        const swBlob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(swBlob);
+        navigator.serviceWorker.register(swUrl).catch(() => {});
+      }
+    })();
+  </script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f5f3ff',
+              100: '#ede9fe',
+              400: '#a78bfa',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+              900: '#4c1d95',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body {
+      background-color: #09090b;
+      color: #f4f4f5;
+      overflow-x: hidden;
+    }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.3); border-radius: 99px; }
+
+    .glass-card {
+      background: linear-gradient(145deg, rgba(24, 24, 27, 0.85), rgba(18, 18, 21, 0.92));
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+    }
+
+    .ambient-glow {
+      position: fixed;
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      filter: blur(95px);
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.22;
+      animation: floatGlow 10s ease-in-out infinite alternate;
+    }
+    @keyframes floatGlow {
+      0% { transform: translate(0px, 0px) scale(1); }
+      100% { transform: translate(25px, -30px) scale(1.12); }
+    }
+
+    .tab-enter {
+      animation: tabFadeSlide 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes tabFadeSlide {
+      from { opacity: 0; transform: translateY(14px) scale(0.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .nav-pill {
+      transition: transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .nav-icon-active {
+      animation: iconPop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes iconPop {
+      0% { transform: scale(0.82) translateY(2px); }
+      55% { transform: scale(1.18) translateY(-3px); }
+      100% { transform: scale(1) translateY(-1px); }
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-brand-500 selection:text-white pb-28" x-data="dietApp()" x-init="initApp()">
+
+  <!-- Ambient Background Lights -->
+  <div class="ambient-glow bg-brand-600 top-[-80px] left-[-60px]"></div>
+  <div class="ambient-glow bg-emerald-500 bottom-[10%] right-[-80px]" style="animation-delay: -4s;"></div>
+
+  <!-- Top Header Bar -->
+  <header class="sticky top-0 z-30 backdrop-blur-xl bg-zinc-950/75 border-b border-white/[0.06]">
+    <div class="max-w-lg mx-auto px-4 py-3.5 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-brand-500/25">
+          <i data-lucide="flame" class="w-4 h-4 text-white"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 class="font-extrabold text-base tracking-tight text-white">Lean<span class="text-brand-400" x-text="profile.targetWeight"></span></h1>
+            <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">Strict</span>
+          </div>
+          <p class="text-[11px] text-zinc-400" x-text="todayFormatted"></p>
+        </div>
+      </div>
+
+      <!-- Shift Toggle, Streak & Settings Button -->
+      <div class="flex items-center gap-1.5">
+        <button @click="toggleOvertime()" 
+                :class="isOvertime ? 'bg-amber-500/15 text-amber-300 border-amber-500/30' : 'bg-zinc-900 text-zinc-300 border-white/10'"
+                class="px-2.5 py-1.5 rounded-xl border text-[11px] font-semibold flex items-center gap-1 transition-all active:scale-95">
+          <i :data-lucide="isOvertime ? 'clock-alert' : 'briefcase'" class="w-3.5 h-3.5"></i>
+          <span x-text="isOvertime ? 'Lembur' : '15:50'"></span>
+        </button>
+
+        <div class="px-2 py-1.5 rounded-xl bg-brand-500/15 border border-brand-500/30 flex items-center gap-1 text-[11px] font-bold text-brand-300">
+          <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400 fill-amber-400"></i>
+          <span x-text="streak + 'd'"></span>
+        </div>
+
+        <button @click="switchTab('settings', 4)"
+                :class="activeTab === 'settings' ? 'bg-brand-600 text-white border-brand-400' : 'bg-zinc-900 text-zinc-300 border-white/10 hover:border-white/25'"
+                class="p-2 rounded-xl border transition-all active:scale-95"
+                title="Pengaturan Parameter">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="max-w-lg mx-auto px-4 pt-4 space-y-4">
+
+    <!-- ==================== TAB 1: DASHBOARD ==================== -->
+    <section x-show="activeTab === 'dashboard'" class="tab-enter space-y-4">
+
+      <!-- Live Intermittent Fasting & Eating Window Card -->
+      <div class="glass-card rounded-3xl p-5 relative overflow-hidden">
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="relative flex h-2.5 w-2.5">
+                <span :class="fastingStatus.isEatingWindow ? 'bg-emerald-400' : 'bg-brand-400'" class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"></span>
+                <span :class="fastingStatus.isEatingWindow ? 'bg-emerald-500' : 'bg-brand-500'" class="relative inline-flex rounded-full h-2.5 w-2.5"></span>
+              </span>
+              <span class="text-xs font-bold uppercase tracking-wider"
+                    :class="fastingStatus.isEatingWindow ? 'text-emerald-400' : 'text-brand-400'"
+                    x-text="fastingStatus.isEatingWindow ? 'Jendela Makan Terbuka' : 'Fase Puasa (Intermittent)'"></span>
+            </div>
+            <h2 class="text-2xl font-extrabold font-mono tracking-tight text-white" x-text="fastingStatus.countdown"></h2>
+            <p class="text-xs text-zinc-400 mt-0.5" x-text="fastingStatus.subtext"></p>
+          </div>
+
+          <div class="text-right">
+            <span class="text-[11px] text-zinc-400 block">Jendela Harian</span>
+            <span class="text-xs font-mono font-bold text-zinc-200 bg-white/5 px-2.5 py-1 rounded-lg border border-white/10 inline-block mt-1"
+                  x-text="`${profile.windowStart} – ${profile.windowEnd}`"></span>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="w-full h-2.5 bg-zinc-800/90 rounded-full overflow-hidden p-0.5 border border-white/5">
+          <div class="h-full rounded-full transition-all duration-700"
+               :class="fastingStatus.isEatingWindow ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-gradient-to-r from-brand-600 to-indigo-400'"
+               :style="`width: ${fastingStatus.progress}%`"></div>
+        </div>
+        <div class="flex justify-between text-[11px] text-zinc-500 mt-2 font-mono">
+          <span>06:50 Kerja</span>
+          <span x-text="`${profile.windowStart} Buka`"></span>
+          <span x-text="`${profile.windowEnd} Tutup`"></span>
+        </div>
+      </div>
+
+      <!-- Calorie & Protein Cards -->
+      <div class="grid grid-cols-2 gap-3">
+        <!-- Calorie Card -->
+        <div class="glass-card rounded-3xl p-4 flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-zinc-400">Kalori Hari Ini</span>
+            <div class="w-7 h-7 rounded-xl bg-orange-500/15 text-orange-400 flex items-center justify-center">
+              <i data-lucide="flame" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div class="my-3">
+            <div class="flex items-baseline gap-1">
+              <span class="text-2xl font-extrabold font-mono text-white" x-text="totalCalories"></span>
+              <span class="text-xs text-zinc-500 font-mono">/ <span x-text="profile.targetCalories"></span></span>
+            </div>
+            <p class="text-[11px] mt-1" :class="totalCalories > profile.targetCalories ? 'text-rose-400' : 'text-emerald-400'">
+              <span x-text="totalCalories <= profile.targetCalories ? `Sisa ${profile.targetCalories - totalCalories} kkal aman` : `Melebihi ${totalCalories - profile.targetCalories} kkal!`"></span>
+            </p>
+          </div>
+          <div class="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-500"
+                 :class="totalCalories > profile.targetCalories ? 'bg-rose-500' : 'bg-gradient-to-r from-orange-500 to-amber-400'"
+                 :style="`width: ${Math.min(100, (totalCalories / profile.targetCalories) * 100)}%`"></div>
+          </div>
+        </div>
+
+        <!-- Protein Card -->
+        <div class="glass-card rounded-3xl p-4 flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-zinc-400">Target Protein</span>
+            <div class="w-7 h-7 rounded-xl bg-brand-500/15 text-brand-400 flex items-center justify-center">
+              <i data-lucide="beef" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div class="my-3">
+            <div class="flex items-baseline gap-1">
+              <span class="text-2xl font-extrabold font-mono text-white" x-text="totalProtein + 'g'"></span>
+              <span class="text-xs text-zinc-500 font-mono">/ <span x-text="profile.targetProtein + 'g'"></span></span>
+            </div>
+            <p class="text-[11px] text-zinc-400 mt-1" x-text="totalProtein >= profile.targetProtein ? 'Target otot terpenuhi!' : `Kurang ${profile.targetProtein - totalProtein}g lagi`"></p>
+          </div>
+          <div class="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-brand-500 to-fuchsia-400 rounded-full transition-all duration-500"
+                 :style="`width: ${Math.min(100, (totalProtein / profile.targetProtein) * 100)}%`"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 Aturan Ketat Harian -->
+      <div class="glass-card rounded-3xl p-5">
+        <div class="flex items-center justify-between mb-3.5">
+          <div>
+            <h3 class="font-bold text-sm text-white flex items-center gap-2">
+              <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
+              4 Aturan Ketat Harian
+            </h3>
+            <p class="text-[11px] text-zinc-400">Centang semua sebelum tidur untuk menjaga streak</p>
+          </div>
+          <span class="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-white/5 text-zinc-300"
+                x-text="`${completedRulesCount}/4`"></span>
+        </div>
+
+        <div class="space-y-2.5">
+          <template x-for="rule in strictRules" :key="rule.id">
+            <button @click="toggleRule(rule.id)"
+                    class="w-full text-left p-3 rounded-2xl border transition-all duration-200 flex items-center gap-3 active:scale-[0.99]"
+                    :class="rule.done ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-zinc-900/70 border-white/[0.06] hover:border-white/15'">
+              <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-all"
+                   :class="rule.done ? 'bg-emerald-500 text-zinc-950 scale-105' : 'bg-zinc-800 border border-white/15 text-transparent'">
+                <i data-lucide="check" class="w-4 h-4 stroke-[3]"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-semibold transition-colors"
+                   :class="rule.done ? 'text-emerald-300 line-through opacity-80' : 'text-zinc-100'"
+                   x-text="rule.id === 4 ? `Tutup Makan Jam ${profile.windowEnd}` : rule.title"></p>
+                <p class="text-[11px] text-zinc-400 truncate"
+                   x-text="rule.id === 4 ? `Puasa bersih hingga istirahat kerja jam ${profile.windowStart}` : rule.desc"></p>
+              </div>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <!-- Hydration & Ice Americano Tracker -->
+      <div class="glass-card rounded-3xl p-5">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="font-bold text-sm text-white flex items-center gap-2">
+              <i data-lucide="droplets" class="w-4 h-4 text-sky-400"></i>
+              Hidrasi & Pengempis Pipi
+            </h3>
+            <p class="text-[11px] text-zinc-400">Target <span x-text="profile.targetWater"></span> ml/hari buang retensi air</p>
+          </div>
+          <span class="font-mono text-sm font-bold text-sky-400" x-text="`${waterMl} / ${profile.targetWater} ml`"></span>
+        </div>
+
+        <div class="w-full h-3 bg-zinc-800 rounded-full overflow-hidden mb-3.5 p-0.5">
+          <div class="h-full bg-gradient-to-r from-sky-500 to-cyan-300 rounded-full transition-all duration-500"
+               :style="`width: ${Math.min(100, (waterMl / profile.targetWater) * 100)}%`"></div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <button @click="addWater(250)" class="py-2 px-3 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> 250 ml
+          </button>
+          <button @click="addWater(600)" class="py-2 px-3 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> 600 ml
+          </button>
+          <button @click="logAmericano()" class="py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95">
+            <i data-lucide="coffee" class="w-3.5 h-3.5"></i> Kopi (<span x-text="americanoCount"></span>)
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 2: MEAL & WARTEG LOG ==================== -->
+    <section x-show="activeTab === 'meals'" class="tab-enter space-y-4">
+      
+      <div class="glass-card rounded-3xl p-5">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h2 class="font-bold text-base text-white">Quick Add Menu Diet</h2>
+            <p class="text-xs text-zinc-400">Sekali tap untuk catat porsi warteg atau masakan rumah</p>
+          </div>
+          <span class="text-[11px] font-mono px-2.5 py-1 rounded-lg bg-brand-500/15 text-brand-300 border border-brand-500/25">1-Tap Log</span>
+        </div>
+
+        <div class="grid grid-cols-1 gap-2.5">
+          <template x-for="preset in mealPresets" :key="preset.name">
+            <button @click="addMeal(preset)"
+                    class="p-3.5 rounded-2xl bg-zinc-900/80 hover:bg-zinc-800/90 border border-white/[0.07] hover:border-brand-500/40 flex items-center justify-between text-left transition-all active:scale-[0.98] group">
+              <div class="pr-3">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-white group-hover:text-brand-300 transition-colors" x-text="preset.name"></span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-md bg-white/5 text-zinc-400" x-text="preset.tag"></span>
+                </div>
+                <p class="text-[11px] text-zinc-400 mt-0.5" x-text="preset.desc"></p>
+              </div>
+              <div class="text-right shrink-0 flex items-center gap-2.5">
+                <div>
+                  <span class="block text-xs font-mono font-bold text-orange-400" x-text="preset.kcal + ' kkal'"></span>
+                  <span class="block text-[11px] font-mono text-brand-400" x-text="preset.protein + 'g prot'"></span>
+                </div>
+                <div class="w-8 h-8 rounded-xl bg-brand-500/20 text-brand-300 flex items-center justify-center group-hover:bg-brand-500 group-hover:text-white transition-all">
+                  <i data-lucide="plus" class="w-4 h-4"></i>
+                </div>
+              </div>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <!-- Smart Auto Calorie Calculator & Indonesian Food Database -->
+      <div class="glass-card rounded-3xl p-5 border border-brand-500/20">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="font-bold text-sm text-white flex items-center gap-2">
+              <i data-lucide="calculator" class="w-4 h-4 text-brand-400"></i>
+              Auto Hitung Kalori Warteg & Rumahan
+            </h3>
+            <p class="text-[11px] text-zinc-400">Ketik atau pilih lauk, otomatis hitung kalori & protein</p>
+          </div>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">Auto-Calc</span>
+        </div>
+
+        <!-- Smart Natural Text Input -->
+        <div class="space-y-2.5 mb-3">
+          <div class="relative">
+            <input type="text" x-model="foodSearchQuery" @input="parseSmartFoodInput()"
+                   placeholder="Ketik: 1 nasi putih, 1 ayam suwir balado, 2 tempe orek..."
+                   class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-zinc-900 border border-white/15 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-brand-500">
+            <i data-lucide="search" class="w-4 h-4 text-zinc-500 absolute left-3 top-2.5"></i>
+            <button x-show="foodSearchQuery.length > 0" @click="foodSearchQuery = ''; parsedTray = []"
+                    class="text-zinc-500 hover:text-white absolute right-2.5 top-2.5">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <!-- Category Filter Chips -->
+          <div class="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+            <template x-for="cat in ['Semua', 'Lauk Protein', 'Karbo', 'Tempe/Tahu', 'Sayur', 'Minuman/Buah']" :key="cat">
+              <button @click="selectedFoodCat = cat"
+                      :class="selectedFoodCat === cat ? 'bg-brand-600 text-white border-brand-400' : 'bg-zinc-900 text-zinc-400 border-white/10 hover:text-zinc-200'"
+                      class="px-2.5 py-1 rounded-lg border text-[11px] font-semibold whitespace-nowrap transition">
+                <span x-text="cat"></span>
+              </button>
+            </template>
+          </div>
+
+          <!-- Filtered Food Database Picker -->
+          <div class="max-h-44 overflow-y-auto space-y-1.5 pr-1">
+            <template x-for="item in filteredFoodDb" :key="item.id">
+              <div class="p-2.5 rounded-xl bg-zinc-900/80 border border-white/[0.06] flex items-center justify-between gap-2">
+                <div class="min-w-0">
+                  <p class="text-xs font-semibold text-zinc-100 truncate" x-text="item.name"></p>
+                  <p class="text-[10px] text-zinc-400 font-mono">
+                    <span x-text="item.unit"></span> • <span class="text-orange-400" x-text="item.kcal + ' kkal'"></span> • <span class="text-brand-400" x-text="item.protein + 'g prot'"></span>
+                  </p>
+                </div>
+                <button @click="addToMealTray(item, 1)"
+                        class="px-2.5 py-1.5 rounded-lg bg-brand-500/20 hover:bg-brand-500 text-brand-300 hover:text-white text-[11px] font-bold shrink-0 transition active:scale-95">
+                  + Piring
+                </button>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Piring Makan Builder (Live Tray) -->
+        <div class="p-3.5 rounded-2xl bg-zinc-950/80 border border-brand-500/25 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-white flex items-center gap-1.5">
+              <i data-lucide="disc" class="w-3.5 h-3.5 text-emerald-400"></i>
+              Isi Piring Sekarang
+            </span>
+            <button x-show="mealTray.length > 0" @click="mealTray = []" class="text-[10px] text-rose-400 hover:underline">Kosongkan</button>
+          </div>
+
+          <template x-if="mealTray.length === 0">
+            <p class="text-[11px] text-zinc-500 italic">Pilih item di atas atau ketik contoh: "1 nasi, 1 ayam suwir balado, 1 tempe bacem"</p>
+          </template>
+
+          <div class="space-y-2" x-show="mealTray.length > 0">
+            <template x-for="(t, idx) in mealTray" :key="t.id">
+              <div class="flex items-center justify-between gap-2 text-xs bg-zinc-900/90 p-2 rounded-xl border border-white/5">
+                <div class="min-w-0 flex-1">
+                  <p class="font-semibold text-zinc-200 truncate" x-text="t.name"></p>
+                  <p class="text-[10px] font-mono text-zinc-400" x-text="`${Math.round(t.kcal * t.qty)} kkal • ${(t.protein * t.qty).toFixed(1)}g prot (${t.unit})`"></p>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <button @click="updateTrayQty(idx, -0.5)" class="w-6 h-6 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold flex items-center justify-center">-</button>
+                  <span class="font-mono text-xs font-bold w-7 text-center text-white" x-text="t.qty + 'x'"></span>
+                  <button @click="updateTrayQty(idx, 0.5)" class="w-6 h-6 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold flex items-center justify-center">+</button>
+                </div>
+              </div>
+            </template>
+
+            <!-- Live Total Bar -->
+            <div class="pt-2 border-t border-white/10 flex items-center justify-between">
+              <div>
+                <span class="text-[10px] text-zinc-400 block">Total Otomatis Piring Ini</span>
+                <span class="text-sm font-extrabold font-mono text-orange-400" x-text="trayTotalKcal + ' kkal'"></span>
+                <span class="text-xs font-mono text-brand-400 ml-1.5" x-text="trayTotalProtein + 'g protein'"></span>
+              </div>
+              <button @click="commitTrayToLog()"
+                      class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 font-extrabold text-xs shadow-lg shadow-emerald-500/20 transition active:scale-95">
+                + Catat Makan Ini
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Collapsible Manual Input Fallback -->
+        <details class="mt-3 group">
+          <summary class="text-[11px] text-zinc-400 hover:text-zinc-200 cursor-pointer select-none flex items-center gap-1">
+            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Input manual angka sendiri (jika menu belum ada)
+          </summary>
+          <div class="mt-2.5 space-y-2 pt-2 border-t border-white/5">
+            <input type="text" x-model="customMeal.name" placeholder="Nama makanan manual"
+                   class="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-brand-500">
+            <div class="grid grid-cols-2 gap-2">
+              <input type="number" x-model.number="customMeal.kcal" placeholder="Kalori (kkal)"
+                     class="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-brand-500">
+              <input type="number" x-model.number="customMeal.protein" placeholder="Protein (g)"
+                     class="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-brand-500">
+            </div>
+            <button @click="addCustomMeal()"
+                    class="w-full py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs transition">
+              + Simpan Manual
+            </button>
+          </div>
+        </details>
+      </div>
+
+      <!-- Today's Logged Meals -->
+      <div class="glass-card rounded-3xl p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold text-sm text-white">Log Makan Hari Ini</h3>
+          <button x-show="todayMeals.length > 0" @click="clearMeals()" class="text-[11px] text-rose-400 hover:underline">Reset Hari Ini</button>
+        </div>
+
+        <template x-if="todayMeals.length === 0">
+          <div class="text-center py-6 text-zinc-500 text-xs">
+            Belum ada makanan tercatat hari ini. Tetap jaga puasa sampai jam <span x-text="profile.windowStart"></span>!
+          </div>
+        </template>
+
+        <div class="space-y-2">
+          <template x-for="(meal, index) in todayMeals" :key="index">
+            <div class="p-3 rounded-2xl bg-zinc-900/70 border border-white/5 flex items-center justify-between">
+              <div>
+                <p class="text-xs font-bold text-zinc-100" x-text="meal.name"></p>
+                <p class="text-[11px] text-zinc-400 font-mono" x-text="`${meal.time} • ${meal.kcal} kkal • ${meal.protein}g protein`"></p>
+              </div>
+              <button @click="removeMeal(index)" class="p-1.5 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 3: WORKOUT & CORE ==================== -->
+    <section x-show="activeTab === 'workout'" class="tab-enter space-y-4">
+      
+      <div class="glass-card rounded-3xl p-5 border-l-4" :class="isOvertime ? 'border-l-amber-500' : 'border-l-emerald-500'">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider"
+                  :class="isOvertime ? 'text-amber-400' : 'text-emerald-400'"
+                  x-text="isOvertime ? 'Mode Lembur (Pulang 18:00)' : 'Mode Pulang Normal (15:50)'"></span>
+            <h2 class="text-base font-extrabold text-white mt-0.5"
+                x-text="isOvertime ? 'Auto-Rest Day / Peregangan 10 Menit' : 'Sesi Bakar Lemak & Core 30 Menit'"></h2>
+            <p class="text-xs text-zinc-400 mt-1"
+               x-text="isOvertime ? 'Hari ini lembur—fokus pemulihan & tidur cukup agar hormon kortisol tidak menahan lemak perut.' : 'Mulai jam 16:30 sebelum mandi sore. Fokus kencangkan perut & bakar 300-400 kkal.'"></p>
+          </div>
+          <div class="p-2.5 rounded-2xl bg-white/5 shrink-0">
+            <i :data-lucide="isOvertime ? 'moon' : 'dumbbell'" class="w-5 h-5 text-brand-400"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Timer -->
+      <div class="glass-card rounded-3xl p-5 text-center">
+        <span class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Timer Plank & Istirahat Set</span>
+        <div class="my-3 font-mono text-4xl font-extrabold text-white tracking-wider" x-text="formatTimer(timerSeconds)"></div>
+        <div class="flex items-center justify-center gap-2 mb-3">
+          <button @click="setTimer(30)" class="px-3 py-1 rounded-lg bg-zinc-800 text-xs font-mono text-zinc-300 hover:bg-zinc-700">30d</button>
+          <button @click="setTimer(45)" class="px-3 py-1 rounded-lg bg-zinc-800 text-xs font-mono text-zinc-300 hover:bg-zinc-700">45d (Plank)</button>
+          <button @click="setTimer(60)" class="px-3 py-1 rounded-lg bg-zinc-800 text-xs font-mono text-zinc-300 hover:bg-zinc-700">60d (Rest)</button>
+        </div>
+        <div class="flex items-center justify-center gap-2.5">
+          <button @click="toggleTimer()"
+                  class="px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition active:scale-95"
+                  :class="timerRunning ? 'bg-amber-500 text-zinc-950' : 'bg-brand-600 text-white shadow-lg shadow-brand-600/30'">
+            <i :data-lucide="timerRunning ? 'pause' : 'play'" class="w-4 h-4"></i>
+            <span x-text="timerRunning ? 'Jeda' : 'Mulai Timer'"></span>
+          </button>
+          <button @click="resetTimer()" class="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs transition">
+            Reset
+          </button>
+        </div>
+      </div>
+
+      <!-- Routine Checklist -->
+      <div class="glass-card rounded-3xl p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold text-sm text-white">Urutan Latihan Rumah (Tanpa Alat)</h3>
+          <span class="text-xs font-mono text-emerald-400" x-text="`${completedWorkoutsCount}/${workouts.length} Selesai`"></span>
+        </div>
+
+        <div class="space-y-2.5">
+          <template x-for="w in workouts" :key="w.id">
+            <button @click="toggleWorkout(w.id)"
+                    class="w-full text-left p-3.5 rounded-2xl border transition-all flex items-center justify-between active:scale-[0.99]"
+                    :class="w.done ? 'bg-brand-500/15 border-brand-500/35' : 'bg-zinc-900/75 border-white/[0.06]'">
+              <div class="flex items-center gap-3">
+                <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                     :class="w.done ? 'bg-brand-500 text-white' : 'bg-zinc-800 border border-white/15 text-transparent'">
+                  <i data-lucide="check" class="w-4 h-4 stroke-[3]"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-bold" :class="w.done ? 'text-brand-300 line-through' : 'text-white'" x-text="w.name"></p>
+                  <p class="text-[11px] text-zinc-400" x-text="w.target"></p>
+                </div>
+              </div>
+              <span class="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-white/5 text-zinc-300" x-text="w.reps"></span>
+            </button>
+          </template>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 4: PROGRESS ==================== -->
+    <section x-show="activeTab === 'progress'" class="tab-enter space-y-4">
+
+      <!-- Dynamic Milestone Banner -->
+      <div class="glass-card rounded-3xl p-5">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-brand-400 uppercase tracking-wider"
+                x-text="`Misi Turun ${Math.max(0, (profile.startWeight - profile.targetWeight)).toFixed(1)} Kg`"></span>
+          <span class="text-xs font-mono font-bold text-emerald-400" x-text="`${weightProgressPct}% Tercapai`"></span>
+        </div>
+
+        <div class="flex items-end justify-between my-3">
+          <div>
+            <span class="text-[11px] text-zinc-400 block">Berat Saat Ini</span>
+            <span class="text-3xl font-extrabold font-mono text-white" x-text="currentWeight.toFixed(1) + ' kg'"></span>
+          </div>
+          <div class="text-center pb-1">
+            <span class="text-xs font-mono px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
+                  x-text="`${(profile.startWeight - currentWeight) >= 0 ? '-' : '+'}${Math.abs(profile.startWeight - currentWeight).toFixed(1)} kg`"></span>
+          </div>
+          <div class="text-right">
+            <span class="text-[11px] text-zinc-400 block">Target Ideal</span>
+            <span class="text-2xl font-extrabold font-mono text-brand-400" x-text="Number(profile.targetWeight).toFixed(1) + ' kg'"></span>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="w-full h-3 bg-zinc-800 rounded-full overflow-hidden p-0.5 border border-white/5">
+          <div class="h-full bg-gradient-to-r from-brand-500 via-indigo-400 to-emerald-400 rounded-full transition-all duration-700"
+               :style="`width: ${weightProgressPct}%`"></div>
+        </div>
+
+        <!-- Body Metrics Summary Strip -->
+        <div class="grid grid-cols-3 gap-2 mt-4">
+          <div class="p-2.5 rounded-xl bg-zinc-900/75 border border-white/5 text-center">
+            <span class="block text-[10px] uppercase font-bold text-zinc-400">BMI Saat Ini</span>
+            <span class="font-mono text-xs font-bold text-white" x-text="currentBmi"></span>
+            <span class="block text-[10px] text-brand-400" x-text="bmiCategory"></span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-zinc-900/75 border border-white/5 text-center">
+            <span class="block text-[10px] uppercase font-bold text-zinc-400">Lingkar Perut</span>
+            <span class="font-mono text-xs font-bold text-white" x-text="currentWaist + ' cm'"></span>
+            <span class="block text-[10px] text-emerald-400" x-text="`-${Math.max(0, profile.startWaist - currentWaist).toFixed(1)} cm`"></span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-zinc-900/75 border border-white/5 text-center">
+            <span class="block text-[10px] uppercase font-bold text-zinc-400">Tinggi Badan</span>
+            <span class="font-mono text-xs font-bold text-white" x-text="profile.height + ' cm'"></span>
+            <span class="block text-[10px] text-zinc-500">BMR <span x-text="calculatedBmr"></span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weight & Waist Log Input -->
+      <div class="glass-card rounded-3xl p-5">
+        <h3 class="font-bold text-sm text-white mb-3">Update Timbangan & Lingkar Perut</h3>
+        <div class="grid grid-cols-2 gap-2.5 mb-3">
+          <div>
+            <label class="text-[11px] text-zinc-400 block mb-1">Berat Badan Baru (kg)</label>
+            <input type="number" step="0.1" x-model.number="newWeightInput" :placeholder="currentWeight"
+                   class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="text-[11px] text-zinc-400 block mb-1">Lingkar Perut Baru (cm)</label>
+            <input type="number" step="0.5" x-model.number="newWaistInput" :placeholder="currentWaist"
+                   class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-brand-500">
+          </div>
+        </div>
+        <button @click="logWeight()"
+                class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-extrabold text-xs shadow-lg shadow-emerald-500/20 transition active:scale-[0.99]">
+          Simpan Progres Mingguan
+        </button>
+      </div>
+
+      <!-- Chart.js Graph -->
+      <div class="glass-card rounded-3xl p-5">
+        <h3 class="font-bold text-sm text-white mb-3">Grafik Penurunan Berat Badan</h3>
+        <div class="h-48 w-full">
+          <canvas id="weightChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Review Perkembangan Otomatis -->
+      <div class="glass-card rounded-3xl p-5 border border-brand-500/25 space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="font-bold text-sm text-white flex items-center gap-2">
+              <i data-lucide="sparkles" class="w-4 h-4 text-brand-400"></i>
+              Review Perkembangan & Evaluasi
+            </h3>
+            <p class="text-[11px] text-zinc-400">Analisis otomatis dari seluruh catatan harianmu</p>
+          </div>
+          <span class="text-[10px] font-bold px-2.5 py-1 rounded-full"
+                :class="disciplineRate >= 80 ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : (disciplineRate >= 50 ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30' : 'bg-rose-500/15 text-rose-400 border border-rose-500/30')"
+                x-text="progressReview.grade"></span>
+        </div>
+
+        <!-- Rata-rata Harian -->
+        <div class="grid grid-cols-3 gap-2">
+          <div class="p-2.5 rounded-xl bg-zinc-900/85 border border-white/5">
+            <span class="block text-[10px] text-zinc-400">Rata-rata Kalori</span>
+            <span class="font-mono text-xs font-extrabold"
+                  :class="progressReview.avgCalories <= profile.targetCalories ? 'text-emerald-400' : 'text-rose-400'"
+                  x-text="progressReview.avgCalories + ' kkal'"></span>
+            <span class="block text-[9px] text-zinc-500" x-text="`Target ≤${profile.targetCalories}`"></span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-zinc-900/85 border border-white/5">
+            <span class="block text-[10px] text-zinc-400">Rata-rata Protein</span>
+            <span class="font-mono text-xs font-extrabold"
+                  :class="progressReview.avgProtein >= profile.targetProtein ? 'text-emerald-400' : 'text-brand-400'"
+                  x-text="progressReview.avgProtein + ' g'"></span>
+            <span class="block text-[9px] text-zinc-500" x-text="`Target ${profile.targetProtein}g`"></span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-zinc-900/85 border border-white/5">
+            <span class="block text-[10px] text-zinc-400">Est. Turun Lemak</span>
+            <span class="font-mono text-xs font-extrabold text-sky-400"
+                  x-text="progressReview.estFatLossKg + ' kg'"></span>
+            <span class="block text-[9px] text-zinc-500" x-text="`Defisit ${progressReview.totalDeficitKcal} kkal`"></span>
+          </div>
+        </div>
+
+        <!-- Insight & Rekomendasi Evaluasi -->
+        <div class="p-3.5 rounded-2xl bg-zinc-950/80 border border-white/[0.06] space-y-2">
+          <p class="text-xs font-bold text-white" x-text="progressReview.headline"></p>
+          <p class="text-[11px] text-zinc-300 leading-relaxed" x-text="progressReview.summary"></p>
+          <div class="pt-1.5 border-t border-white/5 flex items-start gap-2 text-[11px] text-brand-300">
+            <i data-lucide="lightbulb" class="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-400"></i>
+            <span x-text="progressReview.actionTip"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily History & Compliance Record (Unlimited + Search) -->
+      <div class="glass-card rounded-3xl p-5 space-y-3.5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="font-bold text-sm text-white flex items-center gap-2">
+              <i data-lucide="calendar-check-2" class="w-4 h-4 text-brand-400"></i>
+              Semua Rekam Jejak Harian
+            </h3>
+            <p class="text-[11px] text-zinc-400">Tersimpan permanen tanpa batas hari • Cari tanggal/menu</p>
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/5 text-zinc-300"
+                x-text="`${allDailyRecords.length} Hari Total`"></span>
+        </div>
+
+        <!-- Ringkasan Kepatuhan -->
+        <div class="grid grid-cols-3 gap-2">
+          <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+            <span class="block text-[10px] font-bold text-emerald-400">On-Track</span>
+            <span class="font-mono text-sm font-extrabold text-white" x-text="onTrackDaysCount + ' hari'"></span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-center">
+            <span class="block text-[10px] font-bold text-rose-400">Melenceng</span>
+            <span class="font-mono text-sm font-extrabold text-white" x-text="offTrackDaysCount + ' hari'"></span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-brand-500/10 border border-brand-500/20 text-center">
+            <span class="block text-[10px] font-bold text-brand-300">Disiplin</span>
+            <span class="font-mono text-sm font-extrabold text-white" x-text="disciplineRate + '%'"></span>
+          </div>
+        </div>
+
+        <!-- Search Tanggal / Menu & Filter Status -->
+        <div class="space-y-2">
+          <div class="grid grid-cols-12 gap-2">
+            <div class="col-span-7 relative">
+              <input type="text" x-model="historySearchQuery"
+                     placeholder="Cari tgl (13 Nov) / lauk..."
+                     class="w-full pl-8 pr-7 py-2 rounded-xl bg-zinc-900 border border-white/15 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-brand-500">
+              <i data-lucide="search" class="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5"></i>
+              <button x-show="historySearchQuery.length > 0" @click="historySearchQuery = ''"
+                      class="text-zinc-500 hover:text-white absolute right-2 top-2.5">
+                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+            <div class="col-span-5">
+              <input type="date" x-model="historyDatePicker"
+                     class="w-full px-2.5 py-2 rounded-xl bg-zinc-900 border border-white/15 text-[11px] font-mono text-zinc-200 focus:outline-none focus:border-brand-500">
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between gap-1.5">
+            <div class="flex gap-1.5">
+              <template x-for="st in [{k:'all', l:'Semua'}, {k:'ontrack', l:'On-Track'}, {k:'offtrack', l:'Melenceng'}]" :key="st.k">
+                <button @click="historyFilterStatus = st.k"
+                        :class="historyFilterStatus === st.k ? 'bg-brand-600 text-white border-brand-400' : 'bg-zinc-900 text-zinc-400 border-white/10 hover:text-zinc-200'"
+                        class="px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition">
+                  <span x-text="st.l"></span>
+                </button>
+              </template>
+            </div>
+            <button x-show="historySearchQuery || historyDatePicker || historyFilterStatus !== 'all'"
+                    @click="historySearchQuery = ''; historyDatePicker = ''; historyFilterStatus = 'all'"
+                    class="text-[10px] text-rose-400 hover:underline">
+              Reset Filter
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty State Hasil Pencarian -->
+        <template x-if="filteredDailyRecords.length === 0">
+          <div class="text-center py-6 rounded-2xl bg-zinc-900/50 border border-white/5 text-xs text-zinc-500">
+            Tidak ada record yang cocok dengan tanggal atau filter tersebut.
+          </div>
+        </template>
+
+        <!-- List Per Hari (Filtered) -->
+        <div class="space-y-2.5 max-h-[34rem] overflow-y-auto pr-1">
+          <template x-for="rec in filteredDailyRecords" :key="rec.date">
+            <div class="p-3.5 rounded-2xl bg-zinc-900/85 border transition-all"
+                 :class="rec.isOnTrack ? 'border-emerald-500/25' : 'border-rose-500/30'">
+              
+              <!-- Top Row: Tanggal & Status Badge -->
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-white" x-text="rec.dateLabel"></span>
+                  <span x-show="rec.isToday" class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30">Hari Ini</span>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1"
+                      :class="rec.isOnTrack ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'">
+                  <i :data-lucide="rec.isOnTrack ? 'check-circle-2' : 'alert-triangle'" class="w-3 h-3"></i>
+                  <span x-text="rec.statusText"></span>
+                </span>
+              </div>
+
+              <!-- Metric Chips: Kalori, Protein, Aturan, Olahraga -->
+              <div class="grid grid-cols-4 gap-1.5 text-[10px] font-mono mb-2.5">
+                <div class="p-1.5 rounded-lg bg-zinc-950/80 border border-white/5 text-center">
+                  <span class="text-zinc-500 block">Kalori</span>
+                  <span :class="rec.calories > rec.targetCalories ? 'text-rose-400 font-bold' : 'text-orange-400 font-bold'"
+                        x-text="`${rec.calories}/${rec.targetCalories}`"></span>
+                </div>
+                <div class="p-1.5 rounded-lg bg-zinc-950/80 border border-white/5 text-center">
+                  <span class="text-zinc-500 block">Protein</span>
+                  <span :class="rec.protein >= rec.targetProtein ? 'text-emerald-400 font-bold' : 'text-brand-400 font-bold'"
+                        x-text="`${rec.protein}g`"></span>
+                </div>
+                <div class="p-1.5 rounded-lg bg-zinc-950/80 border border-white/5 text-center">
+                  <span class="text-zinc-500 block">Aturan</span>
+                  <span :class="rec.rulesDone >= 3 ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'"
+                        x-text="`${rec.rulesDone}/4`"></span>
+                </div>
+                <div class="p-1.5 rounded-lg bg-zinc-950/80 border border-white/5 text-center">
+                  <span class="text-zinc-500 block">Latihan</span>
+                  <span class="text-zinc-200 font-bold"
+                        x-text="rec.isOvertime ? 'Lembur' : `${rec.workoutsDone}/${rec.workoutsTotal}`"></span>
+                </div>
+              </div>
+
+              <!-- Expandable Detail: Makan apa aja & Olahraga apa aja -->
+              <details class="group">
+                <summary class="text-[11px] text-zinc-400 hover:text-zinc-200 cursor-pointer select-none flex items-center justify-between pt-1 border-t border-white/5">
+                  <span>Lihat detail menu makan & latihan (<span x-text="rec.meals.length"></span> menu)</span>
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform group-open:rotate-180"></i>
+                </summary>
+                <div class="mt-2 space-y-2 text-[11px]">
+                  <!-- Daftar Makanan -->
+                  <div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-orange-400 block mb-1">Menu Dimakan:</span>
+                    <template x-if="rec.meals.length === 0">
+                      <p class="text-zinc-500 italic">Tidak ada makanan tercatat.</p>
+                    </template>
+                    <ul class="space-y-1 text-zinc-300">
+                      <template x-for="(m, i) in rec.meals" :key="i">
+                        <li class="flex justify-between gap-2 bg-zinc-950/60 px-2 py-1 rounded-md">
+                          <span class="truncate" x-text="`• ${m.name}`"></span>
+                          <span class="font-mono text-zinc-400 shrink-0" x-text="`${m.kcal} kkal`"></span>
+                        </li>
+                      </template>
+                    </ul>
+                  </div>
+
+                  <!-- Daftar Olahraga -->
+                  <div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-brand-400 block mb-1">Latihan Dikerjakan:</span>
+                    <template x-if="rec.isOvertime">
+                      <p class="text-amber-300/90 italic">Mode Lembur aktif (Auto-Rest pemulihan).</p>
+                    </template>
+                    <template x-if="!rec.isOvertime && rec.completedWorkoutNames.length === 0">
+                      <p class="text-zinc-500 italic">Belum ada sesi latihan dicentang.</p>
+                    </template>
+                    <div class="flex flex-wrap gap-1" x-show="rec.completedWorkoutNames.length > 0">
+                      <template x-for="wName in rec.completedWorkoutNames" :key="wName">
+                        <span class="px-2 py-0.5 rounded bg-brand-500/15 text-brand-300 border border-brand-500/25 text-[10px]" x-text="'✓ ' + wName"></span>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+            </div>
+          </template>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 5: SETTINGS PARAMETER ==================== -->
+    <section x-show="activeTab === 'settings'" class="tab-enter space-y-4">
+
+      <div class="glass-card rounded-3xl p-5">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="font-bold text-base text-white flex items-center gap-2">
+              <i data-lucide="sliders-horizontal" class="w-4 h-4 text-brand-400"></i>
+              Parameter Tubuh & Target
+            </h2>
+            <p class="text-xs text-zinc-400">Atur ukuran awal setelah kamu timbang & ukur meteran</p>
+          </div>
+          <button @click="autoCalculateTargets()"
+                  class="px-2.5 py-1.5 rounded-xl bg-brand-500/15 hover:bg-brand-500/25 border border-brand-500/30 text-brand-300 text-[11px] font-bold transition active:scale-95">
+            Hitung Auto Kalori
+          </button>
+        </div>
+
+        <div class="space-y-3.5">
+          <!-- Row 1: BB Awal & Target BB -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[11px] font-semibold text-zinc-400 block mb-1">BB Awal (kg)</label>
+              <input type="number" step="0.1" x-model.number="settingsForm.startWeight"
+                     class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+              <label class="text-[11px] font-semibold text-zinc-400 block mb-1">Target BB (kg)</label>
+              <input type="number" step="0.1" x-model.number="settingsForm.targetWeight"
+                     class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-brand-500">
+            </div>
+          </div>
+
+          <!-- Row 2: TB & Lingkar Perut Awal -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[11px] font-semibold text-zinc-400 block mb-1">Tinggi Badan (cm)</label>
+              <input type="number" step="1" x-model.number="settingsForm.height"
+                     class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+              <label class="text-[11px] font-semibold text-zinc-400 block mb-1">Lingkar Perut Awal (cm)</label>
+              <input type="number" step="0.5" x-model.number="settingsForm.startWaist"
+                     class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-brand-500">
+            </div>
+          </div>
+
+          <!-- Row 3: Usia & Gender -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[11px] font-semibold text-zinc-400 block mb-1">Usia (Tahun)</label>
+              <input type="number" x-model.number="settingsForm.age"
+                     class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+              <label class="text-[11px] font-semibold text-zinc-400 block mb-1">Jenis Kelamin</label>
+              <select x-model="settingsForm.gender"
+                      class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-xs text-white focus:outline-none focus:border-brand-500">
+                <option value="male">Laki-laki</option>
+                <option value="female">Perempuan</option>
+              </select>
+            </div>
+          </div>
+
+          <hr class="border-white/[0.06] my-2">
+
+          <!-- Row 4: Target Kalori & Protein -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[11px] font-semibold text-zinc-400 block mb-1">Limit Kalori (kkal/hari)</label>
+              <input type="number" step="10" x-model.number="settingsForm.targetCalories"
+                     class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-xs font-mono text-orange-400 focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+              <label class="text-[11px] font-semibold text-zinc-400 block mb-1">Target Protein (g/hari)</label>
+              <input type="number" step="5" x-model.number="settingsForm.targetProtein"
+                     class="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-xs font-mono text-brand-400 focus:outline-none focus:border-brand-500">
+            </div>
+          </div>
+
+          <!-- Row 5: Jendela Makan IF & Target Air -->
+          <div class="grid grid-cols-3 gap-2.5">
+            <div>
+              <label class="text-[11px] font-semibold text-zinc-400 block mb-1">Buka Makan</label>
+              <input type="time" x-model="settingsForm.windowStart"
+                     class="w-full px-2.5 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+              <label class="text-[11px] font-semibold text-zinc-400 block mb-1">Tutup Makan</label>
+              <input type="time" x-model="settingsForm.windowEnd"
+                     class="w-full px-2.5 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+              <label class="text-[11px] font-semibold text-zinc-400 block mb-1">Air (ml)</label>
+              <input type="number" step="100" x-model.number="settingsForm.targetWater"
+                     class="w-full px-2.5 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-xs font-mono text-sky-400 focus:outline-none focus:border-brand-500">
+            </div>
+          </div>
+
+          <button @click="saveSettings()"
+                  class="w-full py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-lg shadow-brand-600/30 transition active:scale-[0.99] mt-2">
+            Simpan Parameter & Terapkan
+          </button>
+        </div>
+      </div>
+
+      <!-- Install PWA App Card -->
+      <div class="glass-card rounded-3xl p-5 border border-brand-500/25 space-y-3">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-zinc-900 via-indigo-950 to-zinc-950 border border-brand-400/35 flex flex-col items-center justify-center shadow-lg shrink-0">
+            <i data-lucide="flame" class="w-5 h-5 text-brand-400"></i>
+            <span class="text-[9px] font-black tracking-tighter text-white leading-none mt-0.5">LEAN<span class="text-emerald-400">60</span></span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h3 class="font-bold text-sm text-white">Install Aplikasi ke HP (PWA)</h3>
+            <p class="text-[11px] text-zinc-400 leading-snug">Buka layar penuh tanpa bar browser & tetap jalan saat offline</p>
+          </div>
+        </div>
+
+        <button @click="triggerPwaInstall()"
+                class="w-full py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition active:scale-[0.99]">
+          <i data-lucide="smartphone" class="w-4 h-4"></i>
+          <span x-text="deferredPrompt ? 'Install Lean60 Sekarang' : 'Cara Install ke Home Screen'"></span>
+        </button>
+
+        <div x-show="showInstallGuide" x-transition class="p-3 rounded-xl bg-zinc-950/90 border border-white/10 text-[11px] text-zinc-300 space-y-1.5">
+          <p class="font-bold text-white">Langkah Install Manual (Jika tombol belum muncul):</p>
+          <p>• <b>Android (Chrome):</b> Tap titik tiga (<span class="font-mono">⋮</span>) di pojok kanan atas → pilih <b>"Install app"</b> atau <b>"Tambahkan ke Layar utama"</b>.</p>
+          <p>• <b>iPhone (Safari):</b> Tap ikon <b>Share</b> (<span class="font-mono">↑</span>) di bawah → pilih <b>"Add to Home Screen"</b>.</p>
+          <p class="text-[10px] text-zinc-500 pt-1">Catatan: Pastikan file dibuka lewat HTTPS (misal Cloudflare Tunnel / GitHub Pages / Vercel) agar ikon & mode fullscreen PWA aktif penuh.</p>
+        </div>
+      </div>
+
+      <!-- Backup & Reset Card -->
+      <div class="glass-card rounded-3xl p-5 space-y-2.5">
+        <h3 class="font-bold text-xs uppercase tracking-wider text-zinc-400">Data & Reset</h3>
+        <div class="grid grid-cols-2 gap-2.5">
+          <button @click="exportBackup()" class="py-2.5 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-xs font-semibold text-zinc-200 flex items-center justify-center gap-1.5 transition">
+            <i data-lucide="download" class="w-3.5 h-3.5 text-emerald-400"></i> Export JSON
+          </button>
+          <button @click="resetAllData()" class="py-2.5 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 text-xs font-semibold text-rose-400 flex items-center justify-center gap-1.5 transition">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Semua
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ==================== SMOOTH FLOATING BOTTOM NAVBAR (5 TABS) ==================== -->
+  <nav class="fixed bottom-4 inset-x-0 z-40 px-3 pointer-events-none">
+    <div class="max-w-md mx-auto glass-card rounded-3xl p-1.5 border border-white/15 shadow-2xl shadow-black/80 pointer-events-auto relative">
+      <div class="grid grid-cols-5 relative">
+        
+        <!-- Animated Sliding Pill Indicator (1/5 width) -->
+        <div class="nav-pill absolute top-0 bottom-0 w-1/5 p-0.5 pointer-events-none"
+             :style="`transform: translateX(${tabIndex * 100}%)`">
+          <div class="w-full h-full rounded-2xl bg-gradient-to-tr from-brand-600/35 to-indigo-500/25 border border-brand-400/30 shadow-inner"></div>
+        </div>
+
+        <!-- Tab 1: Fokus -->
+        <button @click="switchTab('dashboard', 0)"
+                class="relative z-10 py-2 flex flex-col items-center justify-center gap-1 transition-colors duration-300"
+                :class="activeTab === 'dashboard' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'">
+          <i data-lucide="layout-grid" class="w-4 h-4 transition-transform duration-300"
+             :class="activeTab === 'dashboard' ? 'nav-icon-active text-brand-400' : ''"></i>
+          <span class="text-[10px] font-bold tracking-wide">Fokus</span>
+        </button>
+
+        <!-- Tab 2: Makan -->
+        <button @click="switchTab('meals', 1)"
+                class="relative z-10 py-2 flex flex-col items-center justify-center gap-1 transition-colors duration-300"
+                :class="activeTab === 'meals' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'">
+          <i data-lucide="utensils" class="w-4 h-4 transition-transform duration-300"
+             :class="activeTab === 'meals' ? 'nav-icon-active text-brand-400' : ''"></i>
+          <span class="text-[10px] font-bold tracking-wide">Makan</span>
+        </button>
+
+        <!-- Tab 3: Latihan -->
+        <button @click="switchTab('workout', 2)"
+                class="relative z-10 py-2 flex flex-col items-center justify-center gap-1 transition-colors duration-300"
+                :class="activeTab === 'workout' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'">
+          <i data-lucide="flame" class="w-4 h-4 transition-transform duration-300"
+             :class="activeTab === 'workout' ? 'nav-icon-active text-brand-400' : ''"></i>
+          <span class="text-[10px] font-bold tracking-wide">Latihan</span>
+        </button>
+
+        <!-- Tab 4: Target -->
+        <button @click="switchTab('progress', 3)"
+                class="relative z-10 py-2 flex flex-col items-center justify-center gap-1 transition-colors duration-300"
+                :class="activeTab === 'progress' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'">
+          <i data-lucide="trending-down" class="w-4 h-4 transition-transform duration-300"
+             :class="activeTab === 'progress' ? 'nav-icon-active text-emerald-400' : ''"></i>
+          <span class="text-[10px] font-bold tracking-wide" x-text="profile.targetWeight + ' Kg'"></span>
+        </button>
+
+        <!-- Tab 5: Setting -->
+        <button @click="switchTab('settings', 4)"
+                class="relative z-10 py-2 flex flex-col items-center justify-center gap-1 transition-colors duration-300"
+                :class="activeTab === 'settings' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'">
+          <i data-lucide="sliders-horizontal" class="w-4 h-4 transition-transform duration-300"
+             :class="activeTab === 'settings' ? 'nav-icon-active text-brand-400' : ''"></i>
+          <span class="text-[10px] font-bold tracking-wide">Setting</span>
+        </button>
+
+      </div>
+    </div>
+  </nav>
+
+  <!-- Toast Notification -->
+  <div x-show="toast.show"
+       x-transition:enter="transition ease-out duration-300"
+       x-transition:enter-start="opacity-0 -translate-y-4 scale-95"
+       x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+       x-transition:leave="transition ease-in duration-200"
+       x-transition:leave-start="opacity-100 translate-y-0"
+       x-transition:leave-end="opacity-0 -translate-y-4"
+       class="fixed top-20 inset-x-0 z-50 flex justify-center px-4 pointer-events-none">
+    <div class="px-4 py-2.5 rounded-2xl bg-zinc-900/95 border border-brand-500/40 text-xs font-semibold text-white shadow-xl flex items-center gap-2 backdrop-blur-md">
+      <i data-lucide="sparkles" class="w-4 h-4 text-brand-400"></i>
+      <span x-text="toast.message"></span>
+    </div>
+  </div>
+
+  <script>
+    function dietApp() {
+      return {
+        activeTab: 'dashboard',
+        tabIndex: 0,
+        deferredPrompt: null,
+        showInstallGuide: false,
+        isOvertime: false,
+        streak: 1,
+        waterMl: 0,
+        americanoCount: 0,
+        todayFormatted: '',
+
+        profile: {
+          startWeight: 75.0,
+          targetWeight: 60.0,
+          height: 168,
+          startWaist: 90.0,
+          age: 27,
+          gender: 'male',
+          targetCalories: 1450,
+          targetProtein: 105,
+          targetWater: 2500,
+          windowStart: '11:40',
+          windowEnd: '19:00'
+        },
+
+        settingsForm: {},
+
+        fastingStatus: {
+          isEatingWindow: false,
+          countdown: '00:00:00',
+          subtext: '',
+          progress: 0
+        },
+        toast: { show: false, message: '' },
+
+        strictRules: [
+          { id: 1, title: 'Nol Gula & Minuman Manis', desc: 'Hanya air putih, Ice Americano polos, atau teh tawar', done: false },
+          { id: 2, title: 'Nol Gorengan Tepung & Kerupuk', desc: 'Ayam bakar/suwir tanpa kulit, tempe bacem/kukus', done: false },
+          { id: 3, title: 'Nasi Maksimal 1 Kepal / Makan', desc: 'Perbanyak sayur hijau & lauk protein di warteg', done: false },
+          { id: 4, title: 'Tutup Makan Jam 19:00', desc: 'Puasa bersih hingga istirahat kerja jam 11:40', done: false }
+        ],
+
+        mealPresets: [
+          { name: 'Paket Warteg Istirahat 11:40 (Komplit)', tag: 'Siang Utama', desc: 'Nasi 1 kepal + Dada ayam bakar + 1 Telur bulat + Tempe + Sayur', kcal: 780, protein: 58 },
+          { name: 'Warteg Ayam Suwir & Sayur Hijau', tag: 'Siang/Sore', desc: 'Nasi 1 kepal + Ayam suwir + Tempe orek basah + Tumis kangkung', kcal: 620, protein: 42 },
+          { name: 'Beras Merah + Tumis Ayam Kecap Rumah', tag: 'Masak Hemat', desc: 'Nasi merah 125g + Dada ayam 100g + Tahu panggang + Sawi', kcal: 540, protein: 46 },
+          { name: 'Penutup Sore: 2 Telur Rebus + 1 Pisang', tag: 'Sore Ringan', desc: 'Tutup jendela makan sebelum jam 19:00 tanpa nasi', kcal: 245, protein: 14 },
+          { name: 'Lauk Warteg Tanpa Nasi (Malam/Lembur)', tag: 'Low Carb', desc: 'Ayam suwir + 2 potong tempe bacem + Sayur sop bening', kcal: 360, protein: 34 }
+        ],
+
+        dailyHistory: [],
+        historySearchQuery: '',
+        historyDatePicker: '',
+        historyFilterStatus: 'all',
+        todayMeals: [],
+        customMeal: { name: '', kcal: null, protein: null },
+        foodSearchQuery: '',
+        selectedFoodCat: 'Semua',
+        mealTray: [],
+
+        foodDatabase: [
+          // Lauk Protein
+          { id: 'ayam-suwir-balado', name: 'Ayam Suwir Balado (1 porsi warteg)', cat: 'Lauk Protein', unit: '±75g', kcal: 165, protein: 21, aliases: ['ayam suwir balado', 'ayam suwir', 'suwir balado', 'suwir'] },
+          { id: 'ayam-bakar-dada', name: 'Dada Ayam Bakar (tanpa kulit)', cat: 'Lauk Protein', unit: '1 potong', kcal: 195, protein: 32, aliases: ['ayam bakar', 'dada ayam'] },
+          { id: 'ayam-goreng-dada', name: 'Dada Ayam Goreng (tanpa tepung)', cat: 'Lauk Protein', unit: '1 potong', kcal: 245, protein: 30, aliases: ['ayam goreng'] },
+          { id: 'ayam-kecap', name: 'Ayam Kecap / Semur Ayam', cat: 'Lauk Protein', unit: '1 potong', kcal: 215, protein: 24, aliases: ['ayam kecap', 'semur ayam'] },
+          { id: 'ayam-opor', name: 'Ayam Opor / Gulai (kuah tiris)', cat: 'Lauk Protein', unit: '1 potong', kcal: 235, protein: 23, aliases: ['opor ayam', 'ayam opor', 'gulai ayam'] },
+          { id: 'telur-rebus', name: 'Telur Rebus / Telur Ceplok Air', cat: 'Lauk Protein', unit: '1 butir', kcal: 75, protein: 6.5, aliases: ['telur rebus', 'telur bulat', 'telur'] },
+          { id: 'telur-dadar', name: 'Telur Dadar Warteg', cat: 'Lauk Protein', unit: '1 potong', kcal: 135, protein: 7, aliases: ['telur dadar', 'dadar'] },
+          { id: 'telur-balado', name: 'Telur Bulat Balado', cat: 'Lauk Protein', unit: '1 butir', kcal: 110, protein: 6.5, aliases: ['telur balado'] },
+          { id: 'ikan-tongkol-balado', name: 'Ikan Tongkol Balado / Suwir', cat: 'Lauk Protein', unit: '1 potong', kcal: 155, protein: 22, aliases: ['tongkol', 'ikan tongkol', 'tongkol balado'] },
+          { id: 'ikan-kembung', name: 'Ikan Kembung Bakar / Pesmol', cat: 'Lauk Protein', unit: '1 ekor', kcal: 160, protein: 21, aliases: ['ikan kembung', 'kembung'] },
+          { id: 'ikan-lele-goreng', name: 'Ikan Lele Goreng', cat: 'Lauk Protein', unit: '1 ekor', kcal: 185, protein: 17, aliases: ['lele', 'ikan lele'] },
+          { id: 'ati-ampela', name: 'Ati Ampela Kecap / Balado', cat: 'Lauk Protein', unit: '1 pasang', kcal: 145, protein: 16, aliases: ['ati ampela', 'ati'] },
+
+          // Tempe & Tahu
+          { id: 'tempe-bacem', name: 'Tempe Bacem / Tempe Kukus', cat: 'Tempe/Tahu', unit: '1 potong', kcal: 85, protein: 7.5, aliases: ['tempe bacem', 'tempe kukus', 'tempe'] },
+          { id: 'tempe-goreng', name: 'Tempe Goreng Biasa (non-tepung)', cat: 'Tempe/Tahu', unit: '1 potong', kcal: 110, protein: 7.5, aliases: ['tempe goreng'] },
+          { id: 'tempe-orek', name: 'Tempe Orek Basah (1 sendok sayur)', cat: 'Tempe/Tahu', unit: '±50g', kcal: 115, protein: 6.5, aliases: ['tempe orek', 'orek tempe', 'orek'] },
+          { id: 'tahu-bacem', name: 'Tahu Putih / Tahu Bacem / Kukus', cat: 'Tempe/Tahu', unit: '1 buah', kcal: 65, protein: 6, aliases: ['tahu', 'tahu bacem', 'tahu putih'] },
+          { id: 'tahu-goreng', name: 'Tahu Goreng / Tahu Coklat', cat: 'Tempe/Tahu', unit: '1 buah', kcal: 85, protein: 6, aliases: ['tahu goreng', 'tahu coklat'] },
+
+          // Karbohidrat
+          { id: 'nasi-putih-1', name: 'Nasi Putih (1 kepal / 100g)', cat: 'Karbo', unit: '100g', kcal: 130, protein: 2.5, aliases: ['nasi putih', 'nasi'] },
+          { id: 'nasi-putih-warteg', name: 'Nasi Putih Porsi Standar Warteg', cat: 'Karbo', unit: '150g', kcal: 195, protein: 3.8, aliases: ['nasi warteg'] },
+          { id: 'nasi-merah', name: 'Nasi Merah Pulen (1 porsi)', cat: 'Karbo', unit: '125g', kcal: 140, protein: 3.5, aliases: ['nasi merah', 'beras merah'] },
+          { id: 'kentang-balado', name: 'Kentang Balado / Mustofa (1 sendok)', cat: 'Karbo', unit: '±50g', kcal: 95, protein: 1.5, aliases: ['kentang balado', 'kentang'] },
+
+          // Sayur
+          { id: 'tumis-kangkung', name: 'Tumis Kangkung / Sawi Hijau', cat: 'Sayur', unit: '1 porsi', kcal: 55, protein: 2, aliases: ['kangkung', 'tumis kangkung', 'sawi'] },
+          { id: 'sayur-sop', name: 'Sayur Sop Bening / Sayur Bayam', cat: 'Sayur', unit: '1 mangkuk', kcal: 45, protein: 2, aliases: ['sayur sop', 'sop', 'sayur bayam', 'bayam', 'sayur'] },
+          { id: 'capcay', name: 'Capcay Kuah / Tumis', cat: 'Sayur', unit: '1 porsi', kcal: 75, protein: 3.5, aliases: ['capcay'] },
+          { id: 'terong-balado', name: 'Terong Balado (1 potong)', cat: 'Sayur', unit: '1 potong', kcal: 70, protein: 1, aliases: ['terong balado', 'terong'] },
+
+          // Minuman & Buah
+          { id: 'ice-americano', name: 'Ice Americano Polos (Tanpa Gula)', cat: 'Minuman/Buah', unit: '1 cup', kcal: 5, protein: 0.3, aliases: ['americano', 'ice americano', 'kopi hitam'] },
+          { id: 'pisang', name: 'Pisang Ambon / Cavendish', cat: 'Minuman/Buah', unit: '1 buah', kcal: 95, protein: 1.2, aliases: ['pisang'] },
+          { id: 'sambal', name: 'Sambal Terasi / Sambal Bawang', cat: 'Sayur', unit: '1 sdm', kcal: 25, protein: 0.5, aliases: ['sambal'] }
+        ],
+
+        workouts: [
+          { id: 1, name: 'Bodyweight Squat', target: 'Bakar kalori besar & otot kaki', reps: '3 × 15 rep', done: false },
+          { id: 2, name: 'Push-Up (Standar / Lutut)', target: 'Kencangkan dada, bahu & lengan', reps: '3 × 12 rep', done: false },
+          { id: 3, name: 'Plank Statis', target: 'Kencangkan dinding perut dalam', reps: '3 × 45 dtk', done: false },
+          { id: 4, name: 'Dead Bug / Bicycle Crunch', target: 'Fokus lemak perut samping', reps: '3 × 15 rep', done: false },
+          { id: 5, name: 'Jalan Cepat / Sepeda Santai', target: 'Kardio zona bakar lemak', reps: '20 Menit', done: false }
+        ],
+
+        timerSeconds: 45,
+        timerRunning: false,
+        timerInterval: null,
+
+        weightHistory: [
+          { date: 'Start', weight: 75.0, waist: 90.0 }
+        ],
+        newWeightInput: '',
+        newWaistInput: '',
+        chartInstance: null,
+
+        initApp() {
+          window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            this.deferredPrompt = e;
+          });
+          window.addEventListener('appinstalled', () => {
+            this.deferredPrompt = null;
+            this.showToast('Lean60 berhasil terpasang di layar utama!');
+          });
+          const now = new Date();
+          this.todayFormatted = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
+          this.loadState();
+          this.settingsForm = { ...this.profile };
+          this.updateFastingClock();
+          setInterval(() => this.updateFastingClock(), 1000);
+          this.$nextTick(() => {
+            lucide.createIcons();
+            this.renderChart();
+          });
+        },
+
+        switchTab(tab, idx) {
+          this.activeTab = tab;
+          this.tabIndex = idx;
+          if (tab === 'settings') {
+            this.settingsForm = { ...this.profile };
+          }
+          this.$nextTick(() => {
+            lucide.createIcons();
+            if (tab === 'progress') this.renderChart();
+          });
+        },
+
+        showToast(msg) {
+          this.toast.message = msg;
+          this.toast.show = true;
+          this.$nextTick(() => lucide.createIcons());
+          setTimeout(() => { this.toast.show = false; }, 2600);
+        },
+
+        parseTimeToMins(timeStr) {
+          const [h, m] = (timeStr || '11:40').split(':').map(Number);
+          return (h * 60) + (m || 0);
+        },
+
+        updateFastingClock() {
+          const now = new Date();
+          const currentMins = now.getHours() * 60 + now.getMinutes();
+          const currentSecs = now.getSeconds();
+
+          const openMins = this.parseTimeToMins(this.profile.windowStart);
+          const closeMins = this.parseTimeToMins(this.profile.windowEnd);
+
+          if (currentMins >= openMins && currentMins < closeMins) {
+            this.fastingStatus.isEatingWindow = true;
+            const totalWindowSecs = Math.max(60, (closeMins - openMins) * 60);
+            const elapsedSecs = (currentMins - openMins) * 60 + currentSecs;
+            const remSecs = Math.max(0, totalWindowSecs - elapsedSecs);
+
+            this.fastingStatus.countdown = this.formatHMS(remSecs);
+            this.fastingStatus.subtext = `Tersisa sebelum tutup makan jam ${this.profile.windowEnd}`;
+            this.fastingStatus.progress = Math.min(100, Math.round((elapsedSecs / totalWindowSecs) * 100));
+          } else {
+            this.fastingStatus.isEatingWindow = false;
+            const totalFastSecs = Math.max(60, (24 * 60 - (closeMins - openMins)) * 60);
+            let elapsedFastSecs = 0;
+
+            if (currentMins >= closeMins) {
+              elapsedFastSecs = (currentMins - closeMins) * 60 + currentSecs;
+            } else {
+              elapsedFastSecs = ((24 * 60 - closeMins) + currentMins) * 60 + currentSecs;
+            }
+            const remSecs = Math.max(0, totalFastSecs - elapsedFastSecs);
+            this.fastingStatus.countdown = this.formatHMS(remSecs);
+            this.fastingStatus.subtext = `Menuju buka makan jam ${this.profile.windowStart}`;
+            this.fastingStatus.progress = Math.min(100, Math.round((elapsedFastSecs / totalFastSecs) * 100));
+          }
+        },
+
+        formatHMS(totalSeconds) {
+          const h = Math.floor(totalSeconds / 3600);
+          const m = Math.floor((totalSeconds % 3600) / 60);
+          const s = totalSeconds % 60;
+          return [h, m, s].map(v => String(v).padStart(2, '0')).join(':');
+        },
+
+        autoCalculateTargets() {
+          const w = Number(this.settingsForm.startWeight) || 75;
+          const h = Number(this.settingsForm.height) || 168;
+          const a = Number(this.settingsForm.age) || 27;
+          const s = this.settingsForm.gender === 'female' ? -161 : 5;
+          const bmr = Math.round((10 * w) + (6.25 * h) - (5 * a) + s);
+          const tdee = Math.round(bmr * 1.2);
+          // Strict deficit ~500-550 below TDEE, floored safely around 1350-1450
+          this.settingsForm.targetCalories = Math.max(1300, tdee - 550);
+          this.settingsForm.targetProtein = Math.round(w * 1.45);
+          this.settingsForm.targetWater = Math.round(w * 33 / 100) * 100;
+          this.showToast(`Dihitung otomatis: ${this.settingsForm.targetCalories} kkal & ${this.settingsForm.targetProtein}g protein`);
+        },
+
+        saveSettings() {
+          this.profile = { ...this.settingsForm };
+          // Update baseline 'Start' point in weightHistory
+          if (this.weightHistory.length > 0 && this.weightHistory[0].date === 'Start') {
+            this.weightHistory[0].weight = Number(this.profile.startWeight);
+            this.weightHistory[0].waist = Number(this.profile.startWaist);
+          }
+          this.updateFastingClock();
+          this.saveState();
+          this.renderChart();
+          this.showToast('Parameter tubuh & target berhasil diperbarui!');
+        },
+
+        toggleOvertime() {
+          this.isOvertime = !this.isOvertime;
+          this.saveState();
+          this.showToast(this.isOvertime ? 'Mode Lembur 18:00 aktif (Auto-Rest olahraga)' : 'Mode Shift Normal 15:50 aktif');
+          this.$nextTick(() => lucide.createIcons());
+        },
+
+        toggleRule(id) {
+          const rule = this.strictRules.find(r => r.id === id);
+          if (rule) {
+            rule.done = !rule.done;
+            if (this.completedRulesCount === 4) {
+              this.showToast('Mantap! 4/4 aturan ketat hari ini terpenuhi!');
+            }
+            this.saveState();
+            this.$nextTick(() => lucide.createIcons());
+          }
+        },
+
+        get completedRulesCount() {
+          return this.strictRules.filter(r => r.done).length;
+        },
+
+        addWater(ml) {
+          this.waterMl += ml;
+          this.saveState();
+          this.showToast(`+${ml} ml air putih dicatat!`);
+        },
+
+        logAmericano() {
+          this.americanoCount++;
+          this.saveState();
+          this.showToast('Ice Americano polos (5 kkal) dicatat!');
+        },
+
+        addMeal(preset) {
+          const now = new Date();
+          const timeStr = now.toTimeString().slice(0, 5);
+          this.todayMeals.unshift({
+            name: preset.name,
+            kcal: preset.kcal,
+            protein: preset.protein,
+            time: timeStr
+          });
+          this.saveState();
+          this.showToast(`${preset.name} ditambahkan!`);
+          this.$nextTick(() => lucide.createIcons());
+        },
+
+        get filteredFoodDb() {
+          const q = this.foodSearchQuery.toLowerCase().trim();
+          return this.foodDatabase.filter(item => {
+            const matchCat = this.selectedFoodCat === 'Semua' || item.cat === this.selectedFoodCat;
+            if (!q) return matchCat;
+            // Ambil kata kunci terakhir setelah koma jika user mengetik daftar makanan
+            const lastSegment = q.split(/,|dan|\+/).pop().replace(/^[0-9.,]+\s*/, '').trim();
+            if (!lastSegment) return matchCat;
+            return matchCat && (
+              item.name.toLowerCase().includes(lastSegment) ||
+              item.aliases.some(a => a.includes(lastSegment) || lastSegment.includes(a))
+            );
+          });
+        },
+
+        parseSmartFoodInput() {
+          const raw = this.foodSearchQuery.toLowerCase().trim();
+          if (!raw) return;
+          // Deteksi pola seperti "1 nasi, 1 ayam suwir balado, 2 tempe"
+          const segments = raw.split(/,|\+|\bdan\b/).map(s => s.trim()).filter(Boolean);
+          const matchedItems = [];
+
+          segments.forEach(seg => {
+            const qtyMatch = seg.match(/^([0-9]+(?:[.,][0-9]+)?)\s*(?:porsi|potong|buah|butir|ekor|piring|bungkus|kepal)?\s*(.+)$/);
+            let qty = 1;
+            let foodText = seg;
+            if (qtyMatch) {
+              qty = parseFloat(qtyMatch[1].replace(',', '.')) || 1;
+              foodText = qtyMatch[2].trim();
+            }
+            if (foodText.length < 3) return;
+
+            // Cari kecocokan terbaik di foodDatabase (prioritaskan alias terpanjang)
+            let bestMatch = null;
+            let bestScore = 0;
+            this.foodDatabase.forEach(item => {
+              item.aliases.forEach(alias => {
+                if (foodText === alias || foodText.includes(alias)) {
+                  if (alias.length > bestScore) {
+                    bestScore = alias.length;
+                    bestMatch = item;
+                  }
+                }
+              });
+            });
+
+            if (bestMatch) {
+              const existing = matchedItems.find(m => m.id === bestMatch.id);
+              if (existing) {
+                existing.qty += qty;
+              } else {
+                matchedItems.push({ ...bestMatch, qty });
+              }
+            }
+          });
+
+          if (matchedItems.length > 0) {
+            this.mealTray = matchedItems;
+          }
+        },
+
+        addToMealTray(item, qty = 1) {
+          const existing = this.mealTray.find(t => t.id === item.id);
+          if (existing) {
+            existing.qty += qty;
+          } else {
+            this.mealTray.push({ ...item, qty });
+          }
+          this.$nextTick(() => lucide.createIcons());
+        },
+
+        updateTrayQty(index, delta) {
+          const item = this.mealTray[index];
+          if (!item) return;
+          item.qty = Math.round((item.qty + delta) * 10) / 10;
+          if (item.qty <= 0) {
+            this.mealTray.splice(index, 1);
+          }
+        },
+
+        get trayTotalKcal() {
+          return Math.round(this.mealTray.reduce((sum, i) => sum + (i.kcal * i.qty), 0));
+        },
+
+        get trayTotalProtein() {
+          return Math.round(this.mealTray.reduce((sum, i) => sum + (i.protein * i.qty), 0) * 10) / 10;
+        },
+
+        commitTrayToLog() {
+          if (this.mealTray.length === 0) return;
+          const now = new Date();
+          const summaryName = this.mealTray.map(i => `${i.qty}x ${i.name.split('(')[0].trim()}`).join(' + ');
+          this.todayMeals.unshift({
+            name: summaryName,
+            kcal: this.trayTotalKcal,
+            protein: Math.round(this.trayTotalProtein),
+            time: now.toTimeString().slice(0, 5)
+          });
+          this.mealTray = [];
+          this.foodSearchQuery = '';
+          this.saveState();
+          this.showToast('Total piring berhasil dicatat ke log!');
+          this.$nextTick(() => lucide.createIcons());
+        },
+
+        addCustomMeal() {
+          if (!this.customMeal.name || !this.customMeal.kcal) {
+            this.showToast('Isi nama makanan & kalorinya dulu ya!');
+            return;
+          }
+          const now = new Date();
+          this.todayMeals.unshift({
+            name: this.customMeal.name,
+            kcal: Number(this.customMeal.kcal),
+            protein: Number(this.customMeal.protein || 0),
+            time: now.toTimeString().slice(0, 5)
+          });
+          this.customMeal = { name: '', kcal: null, protein: null };
+          this.saveState();
+          this.showToast('Menu custom tersimpan!');
+          this.$nextTick(() => lucide.createIcons());
+        },
+
+        removeMeal(index) {
+          this.todayMeals.splice(index, 1);
+          this.saveState();
+        },
+
+        clearMeals() {
+          this.todayMeals = [];
+          this.saveState();
+          this.showToast('Log makan hari ini direset');
+        },
+
+        get totalCalories() {
+          return this.todayMeals.reduce((sum, m) => sum + m.kcal, 0) + (this.americanoCount * 5);
+        },
+
+        get totalProtein() {
+          return this.todayMeals.reduce((sum, m) => sum + m.protein, 0);
+        },
+
+        toggleWorkout(id) {
+          const w = this.workouts.find(item => item.id === id);
+          if (w) {
+            w.done = !w.done;
+            this.saveState();
+            this.$nextTick(() => lucide.createIcons());
+          }
+        },
+
+        get completedWorkoutsCount() {
+          return this.workouts.filter(w => w.done).length;
+        },
+
+        setTimer(sec) {
+          this.pauseTimer();
+          this.timerSeconds = sec;
+        },
+
+        toggleTimer() {
+          if (this.timerRunning) {
+            this.pauseTimer();
+          } else {
+            this.timerRunning = true;
+            this.timerInterval = setInterval(() => {
+              if (this.timerSeconds > 0) {
+                this.timerSeconds--;
+              } else {
+                this.pauseTimer();
+                this.showToast('Waktu selesai! Lanjut set berikutnya!');
+              }
+            }, 1000);
+          }
+          this.$nextTick(() => lucide.createIcons());
+        },
+
+        pauseTimer() {
+          this.timerRunning = false;
+          clearInterval(this.timerInterval);
+          this.$nextTick(() => lucide.createIcons());
+        },
+
+        resetTimer() {
+          this.pauseTimer();
+          this.timerSeconds = 45;
+        },
+
+        formatTimer(sec) {
+          const m = Math.floor(sec / 60);
+          const s = sec % 60;
+          return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        },
+
+        buildDaySummary(dateStr, snapshot, isToday = false) {
+          const tCal = snapshot.targetCalories || this.profile.targetCalories;
+          const tProt = snapshot.targetProtein || this.profile.targetProtein;
+          const cal = snapshot.calories || 0;
+          const prot = snapshot.protein || 0;
+          const rulesDone = snapshot.rulesDone || 0;
+          const isOvertime = snapshot.isOvertime || false;
+          const workoutsDone = snapshot.workoutsDone || 0;
+
+          const calOk = cal <= (tCal + 50);
+          const rulesOk = rulesDone >= 3;
+          const isOnTrack = calOk && rulesOk;
+
+          let statusText = 'Target Terpenuhi';
+          if (!calOk && !rulesOk) statusText = 'Over Kalori & Aturan';
+          else if (!calOk) statusText = `Over +${cal - tCal} kkal`;
+          else if (!rulesOk) statusText = 'Aturan Kurang';
+
+          const dObj = new Date(dateStr + 'T00:00:00');
+          const dateLabel = isNaN(dObj)
+            ? dateStr
+            : dObj.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
+
+          return {
+            date: dateStr,
+            dateLabel,
+            isToday,
+            calories: cal,
+            targetCalories: tCal,
+            protein: prot,
+            targetProtein: tProt,
+            waterMl: snapshot.waterMl || 0,
+            rulesDone,
+            isOvertime,
+            workoutsDone,
+            workoutsTotal: snapshot.workoutsTotal || 5,
+            completedWorkoutNames: snapshot.completedWorkoutNames || [],
+            meals: snapshot.meals || [],
+            isOnTrack,
+            statusText
+          };
+        },
+
+        get allDailyRecords() {
+          const todayKey = new Date().toISOString().slice(0, 10);
+          const todaySnapshot = {
+            calories: this.totalCalories,
+            targetCalories: this.profile.targetCalories,
+            protein: this.totalProtein,
+            targetProtein: this.profile.targetProtein,
+            waterMl: this.waterMl,
+            rulesDone: this.completedRulesCount,
+            isOvertime: this.isOvertime,
+            workoutsDone: this.completedWorkoutsCount,
+            workoutsTotal: this.workouts.length,
+            completedWorkoutNames: this.workouts.filter(w => w.done).map(w => w.name),
+            meals: [...this.todayMeals]
+          };
+          const todayRec = this.buildDaySummary(todayKey, todaySnapshot, true);
+          const pastRecs = (this.dailyHistory || [])
+            .filter(item => item.date !== todayKey)
+            .map(item => this.buildDaySummary(item.date, item, false));
+          return [todayRec, ...pastRecs];
+        },
+
+        get onTrackDaysCount() {
+          return this.allDailyRecords.filter(r => r.isOnTrack).length;
+        },
+
+        get offTrackDaysCount() {
+          return this.allDailyRecords.filter(r => !r.isOnTrack).length;
+        },
+
+        get disciplineRate() {
+          if (this.allDailyRecords.length === 0) return 100;
+          return Math.round((this.onTrackDaysCount / this.allDailyRecords.length) * 100);
+        },
+
+        get filteredDailyRecords() {
+          const q = (this.historySearchQuery || '').toLowerCase().trim();
+          const dPick = this.historyDatePicker;
+          return this.allDailyRecords.filter(rec => {
+            if (dPick && rec.date !== dPick) return false;
+            if (this.historyFilterStatus === 'ontrack' && !rec.isOnTrack) return false;
+            if (this.historyFilterStatus === 'offtrack' && rec.isOnTrack) return false;
+            if (q) {
+              const inDate = rec.date.includes(q) || rec.dateLabel.toLowerCase().includes(q);
+              const inStatus = rec.statusText.toLowerCase().includes(q);
+              const inMeals = rec.meals.some(m => (m.name || '').toLowerCase().includes(q));
+              const inWorkouts = rec.completedWorkoutNames.some(w => w.toLowerCase().includes(q));
+              return inDate || inStatus || inMeals || inWorkouts;
+            }
+            return true;
+          });
+        },
+
+        get progressReview() {
+          // Gunakan record yang memiliki aktivitas makan agar rata-rata akurat
+          const activeRecs = this.allDailyRecords.filter(r => r.calories > 0 || !r.isToday);
+          const recs = activeRecs.length > 0 ? activeRecs : this.allDailyRecords;
+          const totalDays = recs.length || 1;
+
+          const avgCalories = Math.round(recs.reduce((s, r) => s + r.calories, 0) / totalDays);
+          const avgProtein = Math.round(recs.reduce((s, r) => s + r.protein, 0) / totalDays);
+          const avgRules = (recs.reduce((s, r) => s + r.rulesDone, 0) / totalDays).toFixed(1);
+
+          // Estimasi TDEE pemeliharaan ~ targetCalories + 550 kkal
+          const estMaintenance = this.profile.targetCalories + 550;
+          const totalDeficitKcal = recs.reduce((s, r) => {
+            if (r.calories === 0) return s;
+            return s + Math.max(0, estMaintenance - r.calories);
+          }, 0);
+          const estFatLossKg = (totalDeficitKcal / 7700).toFixed(2);
+
+          const rate = this.disciplineRate;
+          let grade = 'Sangat Konsisten';
+          let headline = 'Ritme defisit & puasa berjalan solid!';
+          if (rate < 50) {
+            grade = 'Perlu Koreksi';
+            headline = 'Beberapa hari terakhir masih sering melenceng.';
+          } else if (rate < 80) {
+            grade = 'Cukup Baik';
+            headline = 'Progres sudah jalan, tinggal perketat konsistensi.';
+          }
+
+          const lostKg = Math.max(0, this.profile.startWeight - this.currentWeight).toFixed(1);
+          const remKg = Math.max(0, this.currentWeight - this.profile.targetWeight).toFixed(1);
+          const summary = `Dari ${this.allDailyRecords.length} hari tercatat, tingkat disiplinmu ${rate}% (rata-rata ${avgRules}/4 aturan ketat). Berat sudah turun ${lostKg} kg dan tersisa ${remKg} kg menuju ${this.profile.targetWeight} kg.`;
+
+          let actionTip = 'Pertahankan pola makan jendela 11:40–19:00 dan prioritaskan lauk protein di warteg.';
+          if (avgCalories > this.profile.targetCalories) {
+            actionTip = `Rata-rata kalorimu (${avgCalories} kkal) masih di atas batas ${this.profile.targetCalories} kkal—kurangi porsi nasi atau lauk berminyak.`;
+          } else if (avgProtein < this.profile.targetProtein * 0.85) {
+            actionTip = `Kalori sudah aman, tapi rata-rata protein (${avgProtein}g) masih kurang dari ${this.profile.targetProtein}g—tambah 1–2 telur rebus/tempe agar massa otot terjaga.`;
+          } else if (this.offTrackDaysCount > 0) {
+            actionTip = `Cek ${this.offTrackDaysCount} hari yang melenceng lewat filter di bawah untuk melihat pemicu over-kalori.`;
+          }
+
+          return {
+            grade,
+            avgCalories,
+            avgProtein,
+            totalDeficitKcal,
+            estFatLossKg,
+            headline,
+            summary,
+            actionTip
+          };
+        },
+
+        get currentWeight() {
+          return Number(this.weightHistory[this.weightHistory.length - 1].weight);
+        },
+
+        get currentWaist() {
+          const lastWithWaist = [...this.weightHistory].reverse().find(i => i.waist != null);
+          return lastWithWaist ? Number(lastWithWaist.waist) : Number(this.profile.startWaist);
+        },
+
+        get currentBmi() {
+          const hMeters = Number(this.profile.height) / 100;
+          if (!hMeters) return '0.0';
+          return (this.currentWeight / (hMeters * hMeters)).toFixed(1);
+        },
+
+        get bmiCategory() {
+          const bmi = parseFloat(this.currentBmi);
+          if (bmi < 18.5) return 'Underweight';
+          if (bmi < 25) return 'Ideal Sehat';
+          if (bmi < 30) return 'Overweight';
+          return 'Obesitas';
+        },
+
+        get calculatedBmr() {
+          const s = this.profile.gender === 'female' ? -161 : 5;
+          return Math.round((10 * this.currentWeight) + (6.25 * this.profile.height) - (5 * this.profile.age) + s);
+        },
+
+        get weightProgressPct() {
+          const totalToLose = this.profile.startWeight - this.profile.targetWeight;
+          if (totalToLose <= 0) return 100;
+          const lost = this.profile.startWeight - this.currentWeight;
+          const pct = (lost / totalToLose) * 100;
+          return Math.max(0, Math.min(100, Math.round(pct)));
+        },
+
+        logWeight() {
+          if (!this.newWeightInput || this.newWeightInput < 35 || this.newWeightInput > 200) {
+            this.showToast('Masukkan angka berat badan yang valid');
+            return;
+          }
+          const todayLabel = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+          this.weightHistory.push({
+            date: todayLabel,
+            weight: Number(this.newWeightInput),
+            waist: this.newWaistInput ? Number(this.newWaistInput) : this.currentWaist
+          });
+          this.newWeightInput = '';
+          this.newWaistInput = '';
+          this.saveState();
+          this.renderChart();
+          this.showToast('Progres berat & lingkar perut disimpan!');
+        },
+
+        renderChart() {
+          const ctx = document.getElementById('weightChart');
+          if (!ctx) return;
+          if (this.chartInstance) this.chartInstance.destroy();
+
+          const labels = this.weightHistory.map(item => item.date);
+          const data = this.weightHistory.map(item => item.weight);
+          const minY = Math.floor(Math.min(this.profile.targetWeight, ...data) - 2);
+          const maxY = Math.ceil(Math.max(this.profile.startWeight, ...data) + 2);
+
+          this.chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels,
+              datasets: [{
+                label: 'Berat Badan (kg)',
+                data,
+                borderColor: '#8b5cf6',
+                backgroundColor: 'rgba(139, 92, 246, 0.18)',
+                borderWidth: 3,
+                pointBackgroundColor: '#10b981',
+                pointBorderColor: '#09090b',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                fill: true,
+                tension: 0.38
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                y: {
+                  min: minY,
+                  max: maxY,
+                  grid: { color: 'rgba(255,255,255,0.06)' },
+                  ticks: { color: '#a1a1aa', font: { family: 'JetBrains Mono', size: 10 } }
+                },
+                x: {
+                  grid: { display: false },
+                  ticks: { color: '#a1a1aa', font: { family: 'Plus Jakarta Sans', size: 10 } }
+                }
+              }
+            }
+          });
+        },
+
+        async triggerPwaInstall() {
+          if (this.deferredPrompt) {
+            this.deferredPrompt.prompt();
+            const { outcome } = await this.deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+              this.deferredPrompt = null;
+            }
+          } else {
+            this.showInstallGuide = !this.showInstallGuide;
+            this.$nextTick(() => lucide.createIcons());
+          }
+        },
+
+        exportBackup() {
+          const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(localStorage.getItem('lean60_diet_data') || '{}');
+          const dlAnchor = document.createElement('a');
+          dlAnchor.setAttribute("href", dataStr);
+          dlAnchor.setAttribute("download", `lean60-backup-${new Date().toISOString().slice(0,10)}.json`);
+          document.body.appendChild(dlAnchor);
+          dlAnchor.click();
+          dlAnchor.remove();
+          this.showToast('File backup JSON berhasil diunduh!');
+        },
+
+        resetAllData() {
+          if (confirm('Reset semua data progres dan kembalikan ke pengaturan awal?')) {
+            localStorage.removeItem('lean60_diet_data');
+            location.reload();
+          }
+        },
+
+        saveState() {
+          const todayKey = new Date().toISOString().slice(0, 10);
+          const payload = {
+            date: todayKey,
+            profile: this.profile,
+            isOvertime: this.isOvertime,
+            streak: this.streak,
+            waterMl: this.waterMl,
+            americanoCount: this.americanoCount,
+            strictRules: this.strictRules,
+            todayMeals: this.todayMeals,
+            workouts: this.workouts,
+            weightHistory: this.weightHistory,
+            dailyHistory: this.dailyHistory
+          };
+          localStorage.setItem('lean60_diet_data', JSON.stringify(payload));
+        },
+
+        loadState() {
+          const raw = localStorage.getItem('lean60_diet_data');
+          if (!raw) return;
+          try {
+            const data = JSON.parse(raw);
+            const todayKey = new Date().toISOString().slice(0, 10);
+            if (data.profile) {
+              this.profile = { ...this.profile, ...data.profile };
+            }
+            if (data.weightHistory && data.weightHistory.length) {
+              this.weightHistory = data.weightHistory;
+            }
+            if (data.dailyHistory && Array.isArray(data.dailyHistory)) {
+              this.dailyHistory = data.dailyHistory;
+            }
+            if (data.date === todayKey) {
+              this.isOvertime = data.isOvertime ?? false;
+              this.streak = data.streak ?? 1;
+              this.waterMl = data.waterMl ?? 0;
+              this.americanoCount = data.americanoCount ?? 0;
+              if (data.strictRules) this.strictRules = data.strictRules;
+              if (data.todayMeals) this.todayMeals = data.todayMeals;
+              if (data.workouts) this.workouts = data.workouts;
+            } else if (data.date) {
+              // Arsipkan otomatis catatan hari sebelumnya ke dailyHistory sebelum reset harian
+              const prevMeals = data.todayMeals || [];
+              const prevAmericano = data.americanoCount || 0;
+              const prevCalories = prevMeals.reduce((s, m) => s + (m.kcal || 0), 0) + (prevAmericano * 5);
+              const prevProtein = prevMeals.reduce((s, m) => s + (m.protein || 0), 0);
+              const prevRulesDone = (data.strictRules || []).filter(r => r.done).length;
+              const prevWorkouts = data.workouts || [];
+              const prevWorkoutsDone = prevWorkouts.filter(w => w.done).length;
+              const completedWorkoutNames = prevWorkouts.filter(w => w.done).map(w => w.name);
+
+              const archivedEntry = {
+                date: data.date,
+                calories: prevCalories,
+                targetCalories: (data.profile && data.profile.targetCalories) || this.profile.targetCalories,
+                protein: prevProtein,
+                targetProtein: (data.profile && data.profile.targetProtein) || this.profile.targetProtein,
+                waterMl: data.waterMl || 0,
+                rulesDone: prevRulesDone,
+                isOvertime: data.isOvertime ?? false,
+                workoutsDone: prevWorkoutsDone,
+                workoutsTotal: prevWorkouts.length || 5,
+                completedWorkoutNames,
+                meals: prevMeals
+              };
+
+              this.dailyHistory = [
+                archivedEntry,
+                ...this.dailyHistory.filter(h => h.date !== data.date)
+              ];
+
+              const yesterdayOnTrack = prevRulesDone >= 3 && prevCalories <= (archivedEntry.targetCalories + 50);
+              this.streak = yesterdayOnTrack ? (data.streak || 1) + 1 : 1;
+              this.saveState();
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>
